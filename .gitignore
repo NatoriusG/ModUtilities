@@ -1,0 +1,8 @@
+# VS gunk
+.vs/
+# Build output
+bin/
+# Build working files
+obj/
+# Referenced assemblies
+lib/
