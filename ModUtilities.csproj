@@ -17,15 +17,19 @@
 		<Reference Include="UnityEngine.CoreModule">
 			<HintPath>lib\UnityEngine.CoreModule.dll</HintPath>
 		</Reference>
-		<Reference Include="UnityEngine.JSONSerializeModule">
-			<HintPath>lib\UnityEngine.JSONSerializeModule.dll</HintPath>
-		</Reference>
 		<Reference Include="BepInEx">
 			<HintPath>lib\BepInEx.dll</HintPath>
 		</Reference>
 		<Reference Include="0Harmony">
 			<HintPath>lib\0Harmony.dll</HintPath>
 		</Reference>
+		<Reference Include="TinyJSON">
+			<HintPath>lib\TinyJSON.dll</HintPath>
+		</Reference>
 	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="nu deploy.nu" />
+	</Target>
 
 </Project>

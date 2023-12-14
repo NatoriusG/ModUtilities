@@ -61,7 +61,7 @@ namespace ModUtilities
             /// Stores a particular GameObject's GUID, along with other information used for
             /// error-checking.
             /// </summary>
-            struct ObjectNode
+            public struct ObjectNode
             {
                 public uint GUID;
                 public string name;
@@ -70,8 +70,8 @@ namespace ModUtilities
                 public Quaternion rotation;
             }
 
-            const uint startID = 0x1000_0000;
-            static uint maxAssignedID;
+            const uint startID = 1000_0000;
+            static uint maxAssignedID = startID - 1;
 
             /// <summary>
             /// Retrieves the next valid GUID that can be assigned to a new object.
@@ -112,6 +112,7 @@ namespace ModUtilities
             {
                 var registeredObjects = References.GetObjectsRegisteredToSave();
                 var nodesToSave = new List<ObjectNode>();
+                maxAssignedID = startID - 1;
 
                 logger.LogDebug($"Found {registeredObjects.Count} objects to save data for.");
 
@@ -143,7 +144,13 @@ namespace ModUtilities
 
                 logger.LogDebug("All nodes created, returning JSON encoding.");
 
-                return JsonUtility.ToJson(nodesToSave);
+                //var nodesJson = JsonUtility.ToJson(nodesToSave);
+                var nodesJson = TinyJSON.JSON.Dump(nodesToSave);
+
+                logger.LogDebug("TEST: JSON OUT:");
+                logger.LogDebug(nodesJson);
+
+                return nodesJson;
             }
 
             /// <summary>
@@ -153,14 +160,12 @@ namespace ModUtilities
             /// <param name="data">loaded GUID data</param>
             public static void LoadGUIDs(string data)
             {
-                maxAssignedID = startID - 1;
-                logger.LogDebug("Setting maxAssignedID to default.");
-
                 if (data != null) // Assumption: data found and provided by Persistence module
                 {
                     logger.LogDebug("Data retrieved. Parsing object nodes.");
                     var registeredObjects = References.GetObjectsRegisteredToSave();
-                    var savedObjectNodes = JsonUtility.FromJson<List<ObjectNode>>(data);
+                    //var savedObjectNodes = JsonUtility.FromJson<List<ObjectNode>>(data);
+                    var savedObjectNodes = TinyJSON.JSON.Load(data).Make<List<ObjectNode>>();
                     logger.LogDebug($"Found {registeredObjects.Count} objects to save data for.");
 
                     // The entire GUID assignment process assumes there is a one-to-one mapping
@@ -300,10 +305,13 @@ namespace ModUtilities
 
                 logger.LogDebug($"Attempting to save to disk at: {ModsaveFilepath}");
 
+                var saveData = TinyJSON.JSON.Dump(modDataEntries);
+
+                logger.LogDebug("TEST: JSON OUT:");
+                logger.LogDebug(saveData);
+
                 try
                 {
-                    // Encode the mod data collection and save to disk.
-                    var saveData = JsonUtility.ToJson(modDataEntries);
                     var filestream = File.Create(ModsaveFilepath);
                     var filewriter = new StreamWriter(filestream);
                     filewriter.WriteLine(saveData); // WriteLine so the file ends with a newline
@@ -338,7 +346,7 @@ namespace ModUtilities
                     var filereader = new StreamReader(filestream);
                     var rawData = filereader.ReadToEnd();
                     filereader.Close();
-                    loadedData = JsonUtility.FromJson<List<ModData>>(rawData);
+                    loadedData = TinyJSON.JSON.Load(rawData).Make<List<ModData>>();
                 }
                 catch (Exception e)
                 {
